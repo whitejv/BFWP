@@ -1,0 +1,1 @@
+{"v":1,"dev":"well1","seq":48601,"ts":1791405060000,"type":"sensor_fault","data":{"sensor":"psi","raw":4095,"reason":"out_of_range"}}

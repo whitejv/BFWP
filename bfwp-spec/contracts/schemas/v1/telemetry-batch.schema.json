@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bfwp.local/schemas/v1/telemetry-batch.schema.json",
+  "title": "BFWP telemetry batch v1 (offline buffer flush)",
+  "type": "object",
+  "required": ["v", "dev", "batch"],
+  "properties": {
+    "v":   { "const": 1 },
+    "dev": { "type": "string", "pattern": "^[a-z0-9-]{1,32}$" },
+    "batch": {
+      "type": "array", "minItems": 1, "maxItems": 100,
+      "items": {
+        "type": "object",
+        "required": ["seq", "ts", "psi", "amps", "pump", "gal_total", "gpm"],
+        "properties": {
+          "seq":       { "type": "integer", "minimum": 0 },
+          "ts":        { "type": "integer", "minimum": 1735689600000 },
+          "psi":       { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+          "amps":      { "type": ["number", "null"], "minimum": 0, "maximum": 512 },
+          "pump":      { "enum": [0, 1] },
+          "gal_total": { "type": "integer", "minimum": 0 },
+          "gpm":       { "type": "number", "minimum": 0, "maximum": 200 },
+          "amps_raw":  { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

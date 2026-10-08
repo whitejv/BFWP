@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bfwp.local/schemas/v1/sim-command.schema.json",
+  "title": "BFWP digital-twin control command v1 (bfwp-sim/<dev>/cmd)",
+  "type": "object",
+  "required": ["cmd"],
+  "properties": {
+    "cmd": { "enum": ["zone_on", "zone_off", "leak", "fault", "clear_fault", "wifi_down", "reboot", "pump_wear", "set_speed", "pause", "resume", "load_scenario"] },
+    "args": { "type": "object" },
+    "id": { "type": "string", "description": "Optional caller-chosen ID, echoed in the truth log" }
+  },
+  "allOf": [
+    { "if": { "properties": { "cmd": { "const": "zone_on" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["zone"], "properties": {
+        "zone": { "type": "integer", "minimum": 1 }, "gpm": { "type": "number", "minimum": 0 }, "minutes": { "type": "number", "exclusiveMinimum": 0 } } } } } },
+    { "if": { "properties": { "cmd": { "const": "zone_off" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["zone"], "properties": { "zone": { "type": "integer", "minimum": 1 } } } } } },
+    { "if": { "properties": { "cmd": { "const": "leak" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["gpm"], "properties": {
+        "gpm": { "type": "number", "minimum": 0 }, "location": { "enum": ["downstream", "upstream"] } } } } } },
+    { "if": { "properties": { "cmd": { "const": "fault" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["sensor", "mode"], "properties": {
+        "sensor": { "enum": ["psi", "amps", "flow"] }, "mode": { "enum": ["disconnected", "stuck", "noisy"] }, "minutes": { "type": "number", "exclusiveMinimum": 0 } } } } } },
+    { "if": { "properties": { "cmd": { "const": "clear_fault" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["sensor"], "properties": { "sensor": { "enum": ["psi", "amps", "flow"] } } } } } },
+    { "if": { "properties": { "cmd": { "const": "wifi_down" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["minutes"], "properties": { "minutes": { "type": "number", "exclusiveMinimum": 0 } } } } } },
+    { "if": { "properties": { "cmd": { "const": "pump_wear" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["amps_scale"], "properties": { "amps_scale": { "type": "number", "exclusiveMinimum": 0 } } } } } },
+    { "if": { "properties": { "cmd": { "const": "set_speed" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["speed"], "properties": { "speed": { "type": "number", "minimum": 0 } } } } } },
+    { "if": { "properties": { "cmd": { "const": "load_scenario" } } },
+      "then": { "required": ["args"], "properties": { "args": { "required": ["name"], "properties": { "name": { "type": "string" } } } } } }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bfwp.local/schemas/v1/event.schema.json",
+  "title": "BFWP device event v1",
+  "type": "object",
+  "required": ["v", "dev", "seq", "ts", "type", "data"],
+  "properties": {
+    "v":    { "const": 1 },
+    "dev":  { "type": "string", "pattern": "^[a-z0-9-]{1,32}$" },
+    "seq":  { "type": "integer", "minimum": 0 },
+    "ts":   { "type": "integer", "minimum": 1735689600000 },
+    "type": { "type": "string", "pattern": "^[a-z_]{1,32}$" },
+    "data": { "type": "object" }
+  },
+  "definitions": {
+    "psi":  { "type": "number", "minimum": 0, "maximum": 100 },
+    "amps": { "type": "number", "minimum": 0, "maximum": 512 },
+    "ts":   { "type": "integer", "minimum": 1735689600000 },
+    "nonneg": { "type": "number", "minimum": 0 },
+    "nonneg_int": { "type": "integer", "minimum": 0 },
+    "limit_alarm": {
+      "type": "object",
+      "required": ["value", "limit", "duration_s"],
+      "properties": {
+        "value": { "type": "number" }, "limit": { "type": "number" },
+        "duration_s": { "$ref": "#/definitions/nonneg" }
+      }
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "type": { "const": "boot" } } },
+      "then": { "properties": { "data": {
+        "required": ["fw", "reset_reason", "buffered", "rssi"],
+        "properties": {
+          "fw": { "type": "string" },
+          "reset_reason": { "type": "string" },
+          "buffered": { "$ref": "#/definitions/nonneg_int" },
+          "rssi": { "type": "integer", "minimum": -127, "maximum": 0 } } } } } },
+
+    { "if": { "properties": { "type": { "const": "pump_on" } } },
+      "then": { "properties": { "data": {
+        "required": ["psi", "gal_total"],
+        "properties": { "psi": { "$ref": "#/definitions/psi" }, "gal_total": { "$ref": "#/definitions/nonneg_int" } } } } } },
+
+    { "if": { "properties": { "type": { "const": "pump_off" } } },
+      "then": { "properties": { "data": {
+        "required": ["start_ts", "duration_s", "gallons", "psi_avg", "psi_min", "psi_max", "amps_avg", "amps_max", "gal_total"],
+        "properties": {
+          "start_ts": { "$ref": "#/definitions/ts" },
+          "duration_s": { "$ref": "#/definitions/nonneg" },
+          "gallons": { "$ref": "#/definitions/nonneg_int" },
+          "psi_avg": { "$ref": "#/definitions/psi" }, "psi_min": { "$ref": "#/definitions/psi" }, "psi_max": { "$ref": "#/definitions/psi" },
+          "amps_avg": { "$ref": "#/definitions/amps" }, "amps_max": { "$ref": "#/definitions/amps" },
+          "gal_total": { "$ref": "#/definitions/nonneg_int" } } } } } },
+
+    { "if": { "properties": { "type": { "const": "flow_idle" } } },
+      "then": { "properties": { "data": {
+        "required": ["gallons", "window_s", "psi"],
+        "properties": { "gallons": { "type": "integer", "minimum": 1 }, "window_s": { "$ref": "#/definitions/nonneg" }, "psi": { "$ref": "#/definitions/psi" } } } } } },
+
+    { "if": { "properties": { "type": { "const": "psi_decay" } } },
+      "then": { "properties": { "data": {
+        "required": ["psi_start", "psi_end", "window_s"],
+        "properties": { "psi_start": { "$ref": "#/definitions/psi" }, "psi_end": { "$ref": "#/definitions/psi" }, "window_s": { "$ref": "#/definitions/nonneg" } } } } } },
+
+    { "if": { "properties": { "type": { "enum": ["psi_low", "psi_high", "amps_high"] } } },
+      "then": { "properties": { "data": { "$ref": "#/definitions/limit_alarm" } } } },
+
+    { "if": { "properties": { "type": { "const": "short_cycle" } } },
+      "then": { "properties": { "data": {
+        "required": ["cycles", "window_s"],
+        "properties": { "cycles": { "type": "integer", "minimum": 1 }, "window_s": { "$ref": "#/definitions/nonneg" } } } } } },
+
+    { "if": { "properties": { "type": { "const": "sensor_fault" } } },
+      "then": { "properties": { "data": {
+        "required": ["sensor", "raw", "reason"],
+        "properties": {
+          "sensor": { "enum": ["psi", "amps", "flow"] },
+          "raw": { "type": ["number", "null"] },
+          "reason": { "enum": ["out_of_range", "disconnected", "stuck", "noisy"] } } } } } },
+
+    { "if": { "properties": { "type": { "const": "sensor_ok" } } },
+      "then": { "properties": { "data": {
+        "required": ["sensor", "fault_s"],
+        "properties": { "sensor": { "enum": ["psi", "amps", "flow"] }, "fault_s": { "$ref": "#/definitions/nonneg" } } } } } },
+
+    { "if": { "properties": { "type": { "const": "buffer_overflow" } } },
+      "then": { "properties": { "data": {
+        "required": ["dropped", "from_seq", "to_seq"],
+        "properties": { "dropped": { "type": "integer", "minimum": 1 }, "from_seq": { "$ref": "#/definitions/nonneg_int" }, "to_seq": { "$ref": "#/definitions/nonneg_int" } } } } } }
+  ],
+  "additionalProperties": true
+}

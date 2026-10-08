@@ -1,0 +1,25 @@
+name: baseline_normal_night
+description: Normal watering night, no faults. Establishes zone signatures; no leak alarms expected.
+device: twin1
+start: "2026-10-08T21:00:00-05:00"
+end:   "2026-10-09T07:00:00-05:00"
+speed: 0
+seed: 1
+system:
+  pressure_switch: {cut_in: 40, cut_out: 60}
+  zones: {1: {gpm: 14}, 2: {gpm: 11}, 3: {gpm: 12}}
+timeline:
+  - {at: "22:00", zone_on: {zone: 1, minutes: 15}}
+  - {at: "22:15", zone_on: {zone: 2, minutes: 15}}
+  - {at: "22:30", zone_on: {zone: 3, minutes: 15}}
+expect:
+  events:
+    - {type: pump_on,  between: ["22:00", "22:05"]}
+    - {type: pump_off, between: ["22:45", "22:55"]}
+  no_events:
+    - {type: flow_idle, after: "23:00"}
+    - {type: psi_decay}
+    - {type: sensor_fault}
+    - {type: short_cycle}
+  analysis:
+    leak_detected: false

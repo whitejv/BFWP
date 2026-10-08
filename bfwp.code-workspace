@@ -1,0 +1,12 @@
+{
+  "folders": [
+    { "name": "spec (design + contracts)", "path": "bfwp-spec" },
+    { "name": "twin (ESP32 digital twin)", "path": "bfwp-twin" },
+    { "name": "ingest (MQTT -> SQLite)", "path": "bfwp-ingest" },
+    { "name": "mcp (query server)", "path": "bfwp-mcp" },
+    { "name": "firmware (ESP32)", "path": "bfwp-firmware" }
+  ],
+  "settings": {
+    "files.exclude": { "**/.venv": true, "**/.pio": true, "**/__pycache__": true }
+  }
+}

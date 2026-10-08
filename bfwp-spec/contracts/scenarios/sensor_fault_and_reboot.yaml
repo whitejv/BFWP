@@ -1,0 +1,20 @@
+name: sensor_fault_and_reboot
+description: Pressure sensor disconnects for 5 minutes, then the device reboots.
+device: twin1
+start: "2026-10-09T03:00:00-05:00"
+end:   "2026-10-09T04:00:00-05:00"
+speed: 0
+seed: 3
+system:
+  pressure_switch: {cut_in: 40, cut_out: 60}
+  zones: {1: {gpm: 14}}
+timeline:
+  - {at: "03:10", fault:  {sensor: psi, mode: disconnected, minutes: 5}}
+  - {at: "03:30", reboot: {}}
+expect:
+  events:
+    - {type: sensor_fault, between: ["03:10", "03:11"]}
+    - {type: sensor_ok,    between: ["03:15", "03:16"]}
+    - {type: boot,         between: ["03:30", "03:32"]}
+  analysis:
+    leak_detected: false
