@@ -5,8 +5,9 @@ Design docs and contracts for the Bella Flora Water Project. No application code
 `tools/validate.py`.
 
 ## Rules
-- This repo **defines** contracts; other repos consume them. A change here can break four
-  apps — keep changes deliberate, explained, and logged in `CHANGELOG.md`.
+- Follow the project-wide rules in `../CLAUDE.md` (commit prefix `spec:`).
+- This folder **defines** contracts; the four sibling app folders consume them. A change
+  here can break all four apps — keep changes deliberate, explained, and logged in `CHANGELOG.md`.
 - Every schema change needs a matching example in `contracts/examples/v1/` and a passing
   `python3 tools/validate.py`.
 - Keep docs and schemas consistent: if you edit a field in a schema, update

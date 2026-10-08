@@ -8,5 +8,5 @@ rollups, pump cycles) and syncs Hydrawise zone runs.
 - Real data: `bfwp/+/#` -> `well.db`
 - Simulated data: `bfwp-sim/+/#` -> `well-sim.db`
 
-**This repo owns the database schema and migrations.** The reference schema lives in
+**This app owns the database schema and migrations.** The reference schema lives in
 `bfwp-spec/contracts/sqlite/schema-v1.sql`.

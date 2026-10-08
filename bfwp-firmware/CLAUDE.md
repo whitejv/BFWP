@@ -4,6 +4,7 @@
 ESP32 firmware (PlatformIO, Arduino framework) for the BFWP well-house monitor.
 
 ## Contract
+- Targets **spec v1** (draft; will be tagged `spec-v1.0`).
 - Messages, topics and shared scenarios: **spec v1** in `../bfwp-spec/contracts/`.
   Do not change formats here; report contract problems instead.
 - Event rules must match `../bfwp-spec/docs/07-firmware-design.md` (shared with the twin).
@@ -19,3 +20,7 @@ ESP32 firmware (PlatformIO, Arduino framework) for the BFWP well-house monitor.
 
 ## Commands
 - `pio run` · `pio test -e native` · `pio run -t upload` · `pio device monitor`
+
+## Work style
+Follow the project-wide rules in `../CLAUDE.md`: change files only in this folder, commit
+with the `firmware:` prefix, branch as `firmware/<topic>`, and summarize changes for review.

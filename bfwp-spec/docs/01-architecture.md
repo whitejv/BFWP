@@ -25,7 +25,9 @@ The well-house Wi-Fi is isolated from the home network, so a cloud broker is the
 rendezvous point. Neither side needs inbound ports.
 
 ## Components and ownership
-| Component | Repo | Writes | Reads |
+All components live in one git repo (`BFWP`), one folder each.
+
+| Component | Folder | Writes | Reads |
 |---|---|---|---|
 | Contracts & design | `bfwp-spec` | — | — |
 | Device | `bfwp-firmware` | MQTT `bfwp/<dev>/…` | sensors |

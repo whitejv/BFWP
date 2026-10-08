@@ -5,9 +5,10 @@ Python digital twin of the BFWP well-house ESP32. It must be indistinguishable f
 real device to `bfwp-ingest`, except for its device ID and topic root.
 
 ## Contract
+- Targets **spec v1** (draft; will be tagged `spec-v1.0`).
 - Build to **spec v1** in `../bfwp-spec/contracts/` (schemas, examples, topics, scenarios).
 - **Do not change the message format here.** If the contract seems wrong or incomplete,
-  stop and report it — changes happen in `bfwp-spec` first.
+  stop and report it — changes happen in `../bfwp-spec/` first (see `../CLAUDE.md`).
 - Every message published must validate against the v1 JSON Schemas (add a test).
 
 ## Rules
@@ -21,4 +22,5 @@ real device to `bfwp-ingest`, except for its device ID and topic root.
 - `pip install -e .[dev]` · `pytest` · `bfwp-twin run <scenario.yaml>` · `bfwp-twin live`
 
 ## Work style
-Work on a feature branch, keep commits small, and summarize changes for review.
+Follow the project-wide rules in `../CLAUDE.md`: change files only in this folder, commit
+with the `twin:` prefix, branch as `twin/<topic>`, and summarize changes for review.

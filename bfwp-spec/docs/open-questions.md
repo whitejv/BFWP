@@ -11,4 +11,4 @@
 | 7 | Overnight "no watering" window for decay analysis (default 00:00–05:00) — matches the 2027 schedule? | MCP `get_overnight_decay` | Open |
 | 8 | Hydrawise controller ID(s) to sync, and zone count | ingest zone sync | Open |
 | 9 | Data folder on the Mac mini (`~/BFWP-data/`?) and backup destination | ingest | Open |
-| 10 | GitHub account/org for remotes | dev workflow | Open |
+| 10 | GitHub account/org for remotes | dev workflow | Resolved: single private repo `whitejv/BFWP` |

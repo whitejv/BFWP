@@ -4,9 +4,10 @@
 Python MCP server exposing analysis-oriented tools over the BFWP SQLite databases.
 
 ## Contract
+- Targets **spec v1** (draft; will be tagged `spec-v1.0`).
 - Tools: `../bfwp-spec/docs/05-mcp-tools.md`. Database: `../bfwp-spec/contracts/sqlite/schema-v1.sql`.
 - If a tool needs data the schema doesn't have, report it — schema changes go through
-  `bfwp-spec` and are implemented in `bfwp-ingest`.
+  `../bfwp-spec/` and are implemented in `../bfwp-ingest/`.
 
 ## Rules
 - **Open databases read-only** (`file:...?mode=ro`). This server never writes well data.
@@ -20,4 +21,5 @@ Python MCP server exposing analysis-oriented tools over the BFWP SQLite database
 - `pip install -e .[dev]` · `pytest`
 
 ## Work style
-Feature branches, small commits, summarize changes for review.
+Follow the project-wide rules in `../CLAUDE.md`: change files only in this folder, commit
+with the `mcp:` prefix, branch as `mcp/<topic>`, and summarize changes for review.

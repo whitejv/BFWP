@@ -5,9 +5,10 @@ Python service on the Mac mini: HiveMQ Cloud subscriber -> SQLite (WAL mode), pl
 derived tables and Hydrawise zone-run sync.
 
 ## Contract
+- Targets **spec v1** (draft; will be tagged `spec-v1.0`).
 - Messages: **spec v1** in `../bfwp-spec/contracts/`. Do not change message formats here;
   report contract problems instead.
-- Database: start from `../bfwp-spec/contracts/sqlite/schema-v1.sql`. **This repo is the
+- Database: start from `../bfwp-spec/contracts/sqlite/schema-v1.sql`. **This app is the
   only writer and owns migrations.** Any schema change must also update the spec doc.
 
 ## Rules
@@ -22,4 +23,5 @@ derived tables and Hydrawise zone-run sync.
 - `pip install -e .[dev]` · `pytest` · `bfwp-ingest run` · `bfwp-ingest backfill-rollups`
 
 ## Work style
-Feature branches, small commits, summarize changes for review.
+Follow the project-wide rules in `../CLAUDE.md`: change files only in this folder, commit
+with the `ingest:` prefix, branch as `ingest/<topic>`, and summarize changes for review.
