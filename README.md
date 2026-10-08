@@ -16,8 +16,8 @@ labeled folders.
 | `bfwp-twin/` | Digital twin of the ESP32 — simulates the well system and publishes real-format messages. |
 | `bfwp-ingest/` | Mac service: HiveMQ subscriber -> SQLite. Owns the database schema. |
 | `bfwp-mcp/` | MCP server: read-only queries over SQLite + Hydrawise joins. |
-| `bfwp-firmware/` | ESP32 firmware (PlatformIO). |
+| `bfwp-firmware/` | ESP32-C6 firmware (ESP-IDF). |
 
-Start with `bfwp-spec/docs/01-architecture.md`. Development workflow:
+Start with `bfwp-spec/docs/01-architecture.md`. Hardware: `hardware.md`. Development workflow:
 `bfwp-spec/docs/08-dev-workflow.md`. Claude Code instructions: `CLAUDE.md` (project-wide)
 plus one `CLAUDE.md` per app folder.

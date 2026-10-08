@@ -10,7 +10,7 @@ misbehaving?"* can be answered from data.
 ```
  Well house                         Cloud                    Mac mini (home)
 ┌──────────────────┐   TLS 8883   ┌─────────────┐  TLS   ┌──────────────────────────┐
-│ ESP32  (well1)   │ ───────────► │ HiveMQ      │ ─────► │ bfwp-ingest (launchd)    │
+│ ESP32-C6 (well1) │ ───────────► │ HiveMQ      │ ─────► │ bfwp-ingest (launchd)    │
 │  psi · amps ·    │  bfwp/well1/…│ Cloud       │        │   validate → SQLite (WAL)│
 │  flow pulses     │              │ (broker)    │        │   rollups · pump cycles  │
 └──────────────────┘              │             │        │   Hydrawise run sync     │
@@ -36,17 +36,21 @@ All components live in one git repo (`BFWP`), one folder each.
 | Query server | `bfwp-mcp` | nothing | databases (read-only) |
 
 ## Key design decisions
-1. **Device timestamps, UTC epoch ms**, after NTP sync. Receive time is stored separately
+1. **All unit conversion on the ESP32** (ESP-IDF firmware); messages carry engineering units.
+   Calibration constants live on the device. Hardware: `../../hardware.md`.
+2. **Activity-based publishing cadence** — 1 s while water/pump activity is seen, 60 s plus
+   report-on-change when idle; never time-of-day based.
+3. **Device timestamps, UTC epoch ms**, after NTP sync. Receive time is stored separately
    and never used for analysis.
-2. **`seq` per device, never reused** (persisted in flash). `(dev, seq)` is the idempotency
+4. **`seq` per device, never reused** (persisted in flash). `(dev, seq)` is the idempotency
    key, so duplicates (QoS 1) and late buffered batches are harmless.
-3. **Cumulative flow counter (`gal_total`)**, so gallons between any two readings are exact
+5. **Cumulative flow counter (`gal_total`)**, so gallons between any two readings are exact
    even when messages are lost.
-4. **Persistent MQTT session** for ingest (fixed client ID, clean session off, QoS 1) plus
+6. **Persistent MQTT session** for ingest (fixed client ID, clean session off, QoS 1) plus
    **device-side flash buffering**, so neither a sleeping Mac nor a Wi-Fi outage loses data.
-5. **SQLite on local disk**, WAL mode, nightly `.backup` to a synced folder.
-6. **Sim data is physically separate**: different topic root and different database file.
-7. **MCP tools are question-shaped** (pump cycles, overnight decay, zone signatures), not raw
+7. **SQLite on local disk**, WAL mode, nightly `.backup` to a synced folder.
+8. **Sim data is physically separate**: different topic root and different database file.
+9. **MCP tools are question-shaped** (pump cycles, overnight decay, zone signatures), not raw
    dumps, and downsample long ranges.
 
 ## Security
@@ -55,6 +59,8 @@ All components live in one git repo (`BFWP`), one folder each.
   `bfwp-twin` (publish `bfwp-sim/#`, subscribe `bfwp-sim/+/cmd`),
   `bfwp-ingest` (subscribe `bfwp/#`, `bfwp-sim/#`). Restrict by topic if the HiveMQ plan
   allows (see open questions).
-- No credentials in git: `.env` / `include/secrets.h` are gitignored; `*.example` files
+- No credentials in git: `.env` / `bfwp-firmware/main/secrets.h` are gitignored; `*.example` files
   are committed.
-- The device accepts **no** inbound commands in v1 (only the twin has a `cmd` topic).
+- The device accepts **no** inbound telemetry commands in v1 (only the twin has a `cmd`
+  topic). OTA firmware/config updates are planned and must be authenticated — see
+  `07-firmware-design.md` §OTA.

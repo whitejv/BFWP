@@ -10,6 +10,7 @@ win** and this doc gets fixed.
 | `bfwp/<dev>/telemetry` | device → broker | 1 | no | telemetry **or** telemetry batch |
 | `bfwp/<dev>/event` | device → broker | 1 | no | event |
 | `bfwp/<dev>/status` | device → broker | 1 | **yes** | status (also the Last Will) |
+| `bfwp/<dev>/health` | device → broker | 1 | no | health (every 300 s and after boot) |
 | `bfwp-sim/<dev>/…` | twin → broker | 1 | same as above | same payloads |
 | `bfwp-sim/<dev>/cmd` | you/tools → twin | 1 | no | sim command (twin only) |
 
@@ -24,21 +25,40 @@ win** and this doc gets fixed.
 | `ts` | int | UTC epoch **milliseconds**, device clock after NTP sync. Must be ≥ 2025-01-01. |
 
 ## Telemetry
+All values are in engineering units, **converted on the ESP32** using calibration constants
+stored on the device (there is no downstream conversion step).
 ```json
-{"v":1,"dev":"well1","seq":48213,"ts":1791384000123,
+{"v":1,"dev":"well1","seq":48213,"ts":1791384000123,"mode":"active",
  "psi":52.4,"amps":9.8,"pump":1,"gal_total":1284337,"gpm":18.0}
 ```
 | Field | Type | Notes |
 |---|---|---|
-| `psi` | number \| null | 0–100, 0.1 resolution. `null` while the sensor is faulted. |
-| `amps` | number \| null | 0–512, 0.1 resolution. `null` while faulted. |
+| `mode` | `"active"` \| `"idle"` | Cadence in effect when the reading was published (see below). |
+| `psi` | number \| null | Well pressure, 0–100 psi, 0.1 resolution. `null` while the sensor is faulted. |
+| `amps` | number \| null | Pump current, A RMS, 0.1 resolution. Schema bound 0–200 is provisional until the current sensor is chosen. `null` while faulted. |
 | `pump` | 0 \| 1 | Pump running (from amps threshold with hysteresis). |
-| `gal_total` | int | Cumulative gallons, never resets. |
-| `gpm` | number | Instantaneous flow estimate. |
-| `amps_raw` | int | *Optional*, calibration only. |
+| `gal_total` | int | Cumulative gallons = cumulative flow-meter pulses (**1 pulse = 1 gallon**). Never resets. |
+| `gpm` | number | Flow rate in gallons per minute, from the time between pulses (algorithm in `03-sensors-and-units.md`). |
+| `psi_v`, `amps_v` | number | *Optional.* Measured sensor output volts (referred to the sensor side of any divider), so history can be recalibrated. |
 
-**Cadence:** every **1 s** while *active* (pump on, or a flow pulse within the last 120 s),
-otherwise every **60 s**.
+### Cadence (activity-based, not time-of-day)
+The device samples continuously (≈ every 100 ms) and runs event detection on every sample;
+only **publishing** is throttled.
+
+| Mode | Publishes | Enter when **any** of | Leave when **all** of, for `IDLE_HOLD_S` (120 s) |
+|---|---|---|---|
+| `active` | every 1 s | pump current ≥ `PUMP_ON_AMPS`; a flow pulse arrives; psi changes ≥ `FAST_DPSI` (2 psi) within 10 s; any event fires | pump off, no flow pulse, psi steady |
+| `idle` | every 60 s on a fixed grid, **plus** report-on-change | — | — |
+
+- **Report-on-change (idle only):** publish an extra reading as soon as psi differs by
+  ≥ `IDLE_DPSI` (1 psi) from the last published reading. It does not shift the 60 s grid, so
+  extra readings appear between the regular ones.
+- Events are always published immediately, in either mode.
+- Thresholds are device settings (stored in flash), adjustable without rebuilding firmware;
+  the values in use are reported via `calib_id` / firmware config, defaults in
+  `07-firmware-design.md`.
+- Consumers judge gaps by `mode`: > 3 s between `active` readings, or > 90 s between `idle`
+  readings, indicates lost data or an outage.
 
 ### Telemetry batch
 Used when flushing the offline buffer. Same topic. `v` and `dev` are hoisted to the top;
@@ -63,7 +83,7 @@ Envelope + `type` + `data` (an object; shape depends on `type`).
 | `psi_low` / `psi_high` | Pressure beyond limit for ≥ `duration_s` | `value`, `limit`, `duration_s` |
 | `amps_high` | Current beyond limit for ≥ `duration_s` | `value`, `limit`, `duration_s` |
 | `short_cycle` | ≥ `N` pump cycles within `window_s` | `cycles`, `window_s` |
-| `sensor_fault` | Reading out of range / disconnected | `sensor`, `raw`, `reason` |
+| `sensor_fault` | Reading out of range / disconnected | `sensor` (`psi`\|`amps`\|`flow`\|`enclosure_temp`), `raw`, `reason` |
 | `sensor_ok` | Faulted sensor recovered | `sensor`, `fault_s` |
 | `buffer_overflow` | Offline buffer full; oldest data dropped | `dropped`, `from_seq`, `to_seq` |
 
@@ -84,6 +104,28 @@ Notes:
 - Registered as the MQTT Last Will with `{"dev":"well1","online":false}` (no `ts` — the
   broker sends it, and ingest stamps receive time).
 - No `v`/`seq`: status is current-state, not history.
+
+## Health — `bfwp/<dev>/health`
+Envelope (`v`, `dev`, `seq`, `ts`) plus device self-diagnostics. Sent every 300 s and right
+after boot; **not** buffered while offline (a stale health report has little value).
+```json
+{"v":1,"dev":"well1","seq":50001,"ts":1791406005000,"fw":"1.0.3","uptime_s":5,
+ "reset_reason":"poweron","heap_free":231044,"heap_min":228512,"rssi":-71,
+ "wifi_reconnects":0,"mqtt_pub_ok":3,"mqtt_pub_fail":0,"buffer_used":42,
+ "buffer_capacity":9000,"watchdog_timeouts":0,"i2c_devices":["0x48","0x49"],
+ "enclosure_f":88.5,"fan":0,"calib_id":"2026-10-08a"}
+```
+| Field | Notes |
+|---|---|
+| `uptime_s`, `reset_reason` | Since boot; reason from ESP-IDF `esp_reset_reason()` |
+| `heap_free`, `heap_min` | Free heap now / lowest since boot (leak detection for the firmware) |
+| `rssi`, `wifi_reconnects` | Wi-Fi signal and reconnect count since boot |
+| `mqtt_pub_ok`, `mqtt_pub_fail` | Publish counters since boot |
+| `buffer_used`, `buffer_capacity` | Offline buffer fill, in records |
+| `watchdog_timeouts` | Task-watchdog timeouts since boot |
+| `i2c_devices` | Detected I2C addresses (expect the ADCs) |
+| `enclosure_f`, `fan` | Enclosure temperature (°F, `null` if no sensor); fan state if fitted |
+| `calib_id` | ID of the calibration constants in use; changes whenever they change |
 
 ## Sim command (twin only) — `bfwp-sim/<dev>/cmd`
 ```json

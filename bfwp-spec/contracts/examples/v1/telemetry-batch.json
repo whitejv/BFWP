@@ -1,1 +1,1 @@
-{"v":1,"dev":"well1","batch":[{"seq":48214,"ts":1791384001123,"psi":52.3,"amps":9.8,"pump":1,"gal_total":1284337,"gpm":18.0},{"seq":48215,"ts":1791384002124,"psi":52.5,"amps":9.9,"pump":1,"gal_total":1284338,"gpm":18.1}]}
+{"v":1,"dev":"well1","batch":[{"seq":48214,"ts":1791384001123,"mode":"active","psi":52.3,"amps":9.8,"pump":1,"gal_total":1284337,"gpm":18.0},{"seq":48215,"ts":1791384002124,"mode":"active","psi":52.5,"amps":9.9,"pump":1,"gal_total":1284338,"gpm":18.1}]}

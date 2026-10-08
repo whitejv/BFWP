@@ -23,6 +23,7 @@ PREFIXES = [
     ("telemetry", "telemetry.schema.json"),
     ("event", "event.schema.json"),
     ("status", "status.schema.json"),
+    ("health", "health.schema.json"),
     ("sim-command", "sim-command.schema.json"),
 ]
 

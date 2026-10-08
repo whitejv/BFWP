@@ -1,7 +1,7 @@
 # Shared scenarios
 
 Each scenario is a timeline of injected conditions plus **expectations**. The digital twin
-runs them end-to-end; the firmware runs its `core/` logic against them in `env:native`.
+runs them end-to-end; the firmware runs its `components/bfwp_core` logic against them in host tests.
 Both must meet the `expect.events` / `expect.no_events` assertions. `expect.analysis` is
 what the MCP-based analysis should conclude from the resulting data.
 

@@ -16,11 +16,14 @@ CREATE TABLE IF NOT EXISTS readings (
   dev         TEXT    NOT NULL,
   seq         INTEGER NOT NULL,
   ts          INTEGER NOT NULL,
+  mode        TEXT    NOT NULL,   -- 'active' (1 s) | 'idle' (60 s + report-on-change)
   psi         REAL,               -- NULL while sensor faulted
   amps        REAL,
   pump        INTEGER NOT NULL,   -- 0/1
-  gal_total   INTEGER NOT NULL,
+  gal_total   INTEGER NOT NULL,   -- cumulative gallons (1 pulse = 1 gallon)
   gpm         REAL    NOT NULL,
+  psi_v       REAL,               -- optional measured sensor volts (recalibration)
+  amps_v      REAL,
   received_ts INTEGER NOT NULL,   -- Mac receive time (diagnostics only)
   PRIMARY KEY (dev, seq)
 ) WITHOUT ROWID;
@@ -48,6 +51,32 @@ CREATE TABLE IF NOT EXISTS status_log (
   rssi        INTEGER,
   PRIMARY KEY (dev, received_ts)
 );
+
+-- Periodic device health reports.
+CREATE TABLE IF NOT EXISTS health (
+  dev               TEXT    NOT NULL,
+  seq               INTEGER NOT NULL,
+  ts                INTEGER NOT NULL,
+  fw                TEXT    NOT NULL,
+  uptime_s          INTEGER NOT NULL,
+  reset_reason      TEXT    NOT NULL,
+  heap_free         INTEGER NOT NULL,
+  heap_min          INTEGER NOT NULL,
+  rssi              INTEGER NOT NULL,
+  wifi_reconnects   INTEGER NOT NULL,
+  mqtt_pub_ok       INTEGER NOT NULL,
+  mqtt_pub_fail     INTEGER NOT NULL,
+  buffer_used       INTEGER NOT NULL,
+  buffer_capacity   INTEGER NOT NULL,
+  watchdog_timeouts INTEGER NOT NULL,
+  i2c_devices       TEXT    NOT NULL,   -- JSON array
+  enclosure_f       REAL,
+  fan               INTEGER,
+  calib_id          TEXT    NOT NULL,
+  received_ts       INTEGER NOT NULL,
+  PRIMARY KEY (dev, seq)
+) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS idx_health_dev_ts ON health(dev, ts);
 
 -- Derived: one row per pump cycle (from pump_on/pump_off events, rebuilt from readings if needed).
 CREATE TABLE IF NOT EXISTS pump_cycles (

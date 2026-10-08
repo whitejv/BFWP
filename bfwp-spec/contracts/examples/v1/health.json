@@ -1,0 +1,1 @@
+{"v":1,"dev":"well1","seq":50001,"ts":1791406005000,"fw":"1.0.3","uptime_s":5,"reset_reason":"poweron","heap_free":231044,"heap_min":228512,"rssi":-71,"wifi_reconnects":0,"mqtt_pub_ok":3,"mqtt_pub_fail":0,"buffer_used":42,"buffer_capacity":9000,"watchdog_timeouts":0,"i2c_devices":["0x48","0x49"],"enclosure_f":88.5,"fan":0,"calib_id":"2026-10-08a"}

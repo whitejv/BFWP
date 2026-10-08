@@ -5,7 +5,7 @@
   it installs the extension).
 - Open the `BFWP` folder in Cursor (or `bfwp.code-workspace` for labeled folders).
 - Python apps: Python 3.11+, a `.venv` per app folder, `pip install -e .[dev]`, `pytest`.
-- Firmware: PlatformIO extension in Cursor.
+- Firmware: ESP-IDF v5.x (`idf.py`); the Espressif ESP-IDF extension in Cursor is optional.
 
 ## Git — one repo, five apps
 - Single repo **`BFWP`** (GitHub: `whitejv/BFWP`, private), default branch `main`.
@@ -38,7 +38,7 @@ Claude Code loads the top-level CLAUDE.md plus the one for the folder it's worki
 2. **Twin + ingest** — in parallel (two Claude Code sessions, one per app folder). The twin
    gives ingest realistic traffic immediately.
 3. **MCP** — against `well-sim.db` from twin scenarios; check analysis against truth logs.
-4. **Firmware** — when hardware arrives; must pass the shared scenarios in `env:native`.
+4. **Firmware** — when hardware arrives; its `bfwp_core` logic must pass the shared scenarios in host tests.
 
 Running two sessions at once in one repo:
 - Each session works **only in its own app folder**, on its own branch.
@@ -58,7 +58,7 @@ Running two sessions at once in one repo:
 | App folder | File (gitignored) | Template (committed) |
 |---|---|---|
 | `bfwp-twin/`, `bfwp-ingest/`, `bfwp-mcp/` | `.env` | `.env.example` |
-| `bfwp-firmware/` | `include/secrets.h` | `include/secrets.example.h` |
+| `bfwp-firmware/` | `main/secrets.h` | `main/secrets.example.h` |
 
 Check before pushing: `git status` should never list `.env` or `secrets.h`.
 

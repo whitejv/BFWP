@@ -17,9 +17,12 @@ analysis detects injected problems.
 | Noise | Gaussian noise on psi (±0.2) and amps (±0.1), configurable. |
 
 ## 2. Device behavior (must match firmware)
-Same as `07-firmware-design.md` §Event rules: seq handling, cadence (1 s active / 60 s
-idle), event detection, offline buffering + batch flush, boot event, retained status and
-Last Will. When `wifi_down` is injected, the twin buffers and flushes with batches exactly
+Same as `07-firmware-design.md` §Event rules and §Publishing cadence: seq handling,
+activity-based cadence (`active` 1 s / `idle` 60 s + report-on-change, with the 2-minute
+hold), event detection, `gpm` from pulse intervals, offline buffering + batch flush, boot
+event, periodic `health` reports, retained status and Last Will. The twin publishes values
+already in engineering units (it simulates the device *after* conversion) and may include
+`psi_v`/`amps_v` computed from the default calibration. When `wifi_down` is injected, the twin buffers and flushes with batches exactly
 as the device would.
 
 ## 3. Ways to drive it
@@ -52,6 +55,8 @@ timeline:
   - {at: "23:30", leak:     {gpm: 0.4, location: downstream}}
   - {at: "02:00", wifi_down: {minutes: 20}}
 expect:                          # shared assertions (twin AND firmware logic must pass)
+  cadence:                       # optional: publishing-mode assertions
+    - {mode: active, between: ["22:00", "22:15"]}
   events:
     - {type: pump_on,  between: ["22:00", "22:05"]}
     - {type: flow_idle, after: "23:30"}

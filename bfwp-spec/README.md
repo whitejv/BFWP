@@ -13,15 +13,17 @@ spec (currently v1, draft).
 | [04 Storage](docs/04-storage.md) | SQLite layout, derived tables, retention, backups |
 | [05 MCP tools](docs/05-mcp-tools.md) | Query tools Claude uses for analysis |
 | [06 Digital twin](docs/06-digital-twin.md) | Simulation model, scenarios, live control, truth log |
-| [07 Firmware design](docs/07-firmware-design.md) | ESP32 hardware notes and the shared event rules |
+| [07 Firmware design](docs/07-firmware-design.md) | ESP-IDF firmware design, MWP reuse, cadence and event rules |
 | [08 Development workflow](docs/08-dev-workflow.md) | Cursor, Claude Code, monorepo git, parallel agents, secrets |
 | [Open questions](docs/open-questions.md) | Decisions still pending |
+| [Hardware](../hardware.md) | Board, sensors, wiring, BOM, open hardware questions (project root) |
 
 ## Contracts
 ```
 contracts/
   topics.v1.json            MQTT topic map
-  schemas/v1/*.schema.json  JSON Schemas (draft-07) for every message
+  schemas/v1/*.schema.json  JSON Schemas (draft-07): telemetry, telemetry-batch, event,
+                            status, health, sim-command
   examples/v1/*.json        Valid example messages (also test vectors)
   sqlite/schema-v1.sql      Reference database schema (ingest writes, MCP reads)
   scenarios/*.yaml          Shared behavior scenarios (twin + firmware must pass)

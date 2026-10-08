@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bfwp.local/schemas/v1/health.schema.json",
+  "title": "BFWP device health v1",
+  "description": "Periodic device self-report (every 5 min and right after boot). Not buffered while offline.",
+  "type": "object",
+  "required": ["v", "dev", "seq", "ts", "fw", "uptime_s", "reset_reason", "heap_free", "heap_min",
+               "rssi", "wifi_reconnects", "mqtt_pub_ok", "mqtt_pub_fail", "buffer_used", "buffer_capacity",
+               "watchdog_timeouts", "i2c_devices", "enclosure_f", "calib_id"],
+  "properties": {
+    "v":    { "const": 1 },
+    "dev":  { "type": "string", "pattern": "^[a-z0-9-]{1,32}$" },
+    "seq":  { "type": "integer", "minimum": 0 },
+    "ts":   { "type": "integer", "minimum": 1735689600000 },
+    "fw":   { "type": "string" },
+    "uptime_s":          { "type": "integer", "minimum": 0 },
+    "reset_reason":      { "type": "string", "description": "Reason for the last reset (ESP-IDF esp_reset_reason name, lowercased)" },
+    "heap_free":         { "type": "integer", "minimum": 0 },
+    "heap_min":          { "type": "integer", "minimum": 0, "description": "Lowest free heap since boot" },
+    "rssi":              { "type": "integer", "minimum": -127, "maximum": 0 },
+    "wifi_reconnects":   { "type": "integer", "minimum": 0, "description": "Since boot" },
+    "mqtt_pub_ok":       { "type": "integer", "minimum": 0, "description": "Since boot" },
+    "mqtt_pub_fail":     { "type": "integer", "minimum": 0, "description": "Since boot" },
+    "buffer_used":       { "type": "integer", "minimum": 0, "description": "Records waiting in the offline buffer" },
+    "buffer_capacity":   { "type": "integer", "minimum": 1 },
+    "watchdog_timeouts": { "type": "integer", "minimum": 0, "description": "Since boot" },
+    "i2c_devices":       { "type": "array", "items": { "type": "string", "pattern": "^0x[0-9a-f]{2}$" }, "description": "Detected I2C addresses, e.g. [\"0x48\", \"0x49\"]" },
+    "enclosure_f":       { "type": ["number", "null"], "minimum": -40, "maximum": 185, "description": "Enclosure temperature, °F. null if no sensor." },
+    "fan":               { "enum": [0, 1], "description": "Optional. Enclosure fan state, if fitted." },
+    "calib_id":          { "type": "string", "description": "Identifier of the calibration constants in use (changes whenever they change)" }
+  },
+  "additionalProperties": true
+}

@@ -2,25 +2,101 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://bfwp.local/schemas/v1/telemetry-batch.schema.json",
   "title": "BFWP telemetry batch v1 (offline buffer flush)",
+  "description": "Items have the same fields as a single telemetry message, minus v and dev (hoisted).",
   "type": "object",
-  "required": ["v", "dev", "batch"],
+  "required": [
+    "v",
+    "dev",
+    "batch"
+  ],
   "properties": {
-    "v":   { "const": 1 },
-    "dev": { "type": "string", "pattern": "^[a-z0-9-]{1,32}$" },
+    "v": {
+      "const": 1
+    },
+    "dev": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,32}$"
+    },
     "batch": {
-      "type": "array", "minItems": 1, "maxItems": 100,
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
       "items": {
         "type": "object",
-        "required": ["seq", "ts", "psi", "amps", "pump", "gal_total", "gpm"],
+        "required": [
+          "seq",
+          "ts",
+          "mode",
+          "psi",
+          "amps",
+          "pump",
+          "gal_total",
+          "gpm"
+        ],
         "properties": {
-          "seq":       { "type": "integer", "minimum": 0 },
-          "ts":        { "type": "integer", "minimum": 1735689600000 },
-          "psi":       { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
-          "amps":      { "type": ["number", "null"], "minimum": 0, "maximum": 512 },
-          "pump":      { "enum": [0, 1] },
-          "gal_total": { "type": "integer", "minimum": 0 },
-          "gpm":       { "type": "number", "minimum": 0, "maximum": 200 },
-          "amps_raw":  { "type": "integer", "minimum": 0 }
+          "seq": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ts": {
+            "type": "integer",
+            "minimum": 1735689600000,
+            "description": "UTC epoch ms, >= 2025-01-01"
+          },
+          "mode": {
+            "enum": [
+              "active",
+              "idle"
+            ],
+            "description": "Publishing cadence in effect: active = 1 s, idle = 60 s (+ report-on-change)"
+          },
+          "psi": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Well pressure, psi gauge. null while sensor faulted."
+          },
+          "amps": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 200,
+            "description": "Pump motor current, A RMS. Upper bound provisional until the current sensor is chosen. null while faulted."
+          },
+          "pump": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "gal_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Cumulative gallons (= cumulative meter pulses). Never resets."
+          },
+          "gpm": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 200,
+            "description": "Flow rate from the interval between pulses; see 03-sensors-and-units.md"
+          },
+          "psi_v": {
+            "type": "number",
+            "minimum": -0.5,
+            "maximum": 6.2,
+            "description": "Optional. Measured pressure-sensor voltage at the sensor (before any divider), for recalibration."
+          },
+          "amps_v": {
+            "type": "number",
+            "minimum": -0.5,
+            "maximum": 6.2,
+            "description": "Optional. Measured current-sensor voltage at the sensor (before any divider), for recalibration."
+          }
         },
         "additionalProperties": true
       }

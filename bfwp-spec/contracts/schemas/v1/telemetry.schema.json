@@ -2,19 +2,22 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://bfwp.local/schemas/v1/telemetry.schema.json",
   "title": "BFWP telemetry (single reading) v1",
+  "description": "All values are converted to engineering units on the device. 1 flow pulse = 1 gallon.",
   "type": "object",
-  "required": ["v", "dev", "seq", "ts", "psi", "amps", "pump", "gal_total", "gpm"],
+  "required": ["v", "dev", "seq", "ts", "mode", "psi", "amps", "pump", "gal_total", "gpm"],
   "properties": {
     "v":         { "const": 1 },
     "dev":       { "type": "string", "pattern": "^[a-z0-9-]{1,32}$" },
     "seq":       { "type": "integer", "minimum": 0 },
     "ts":        { "type": "integer", "minimum": 1735689600000, "description": "UTC epoch ms, >= 2025-01-01" },
-    "psi":       { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
-    "amps":      { "type": ["number", "null"], "minimum": 0, "maximum": 512 },
+    "mode":      { "enum": ["active", "idle"], "description": "Publishing cadence in effect: active = 1 s, idle = 60 s (+ report-on-change)" },
+    "psi":       { "type": ["number", "null"], "minimum": 0, "maximum": 100, "description": "Well pressure, psi gauge. null while sensor faulted." },
+    "amps":      { "type": ["number", "null"], "minimum": 0, "maximum": 200, "description": "Pump motor current, A RMS. Upper bound provisional until the current sensor is chosen. null while faulted." },
     "pump":      { "enum": [0, 1] },
-    "gal_total": { "type": "integer", "minimum": 0 },
-    "gpm":       { "type": "number", "minimum": 0, "maximum": 200 },
-    "amps_raw":  { "type": "integer", "minimum": 0, "description": "Optional, calibration only" }
+    "gal_total": { "type": "integer", "minimum": 0, "description": "Cumulative gallons (= cumulative meter pulses). Never resets." },
+    "gpm":       { "type": "number", "minimum": 0, "maximum": 200, "description": "Flow rate from the interval between pulses; see 03-sensors-and-units.md" },
+    "psi_v":     { "type": "number", "minimum": -0.5, "maximum": 6.2, "description": "Optional. Measured pressure-sensor voltage at the sensor (before any divider), for recalibration." },
+    "amps_v":    { "type": "number", "minimum": -0.5, "maximum": 6.2, "description": "Optional. Measured current-sensor voltage at the sensor (before any divider), for recalibration." }
   },
   "additionalProperties": true
 }

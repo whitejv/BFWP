@@ -1,11 +1,61 @@
 {
   "version": 1,
-  "roots": { "real": "bfwp", "sim": "bfwp-sim" },
+  "roots": {
+    "real": "bfwp",
+    "sim": "bfwp-sim"
+  },
   "device_id_pattern": "^[a-z0-9-]{1,32}$",
   "topics": [
-    { "pattern": "{root}/{dev}/telemetry", "qos": 1, "retain": false, "schemas": ["telemetry.schema.json", "telemetry-batch.schema.json"], "publisher": "device|twin" },
-    { "pattern": "{root}/{dev}/event",     "qos": 1, "retain": false, "schemas": ["event.schema.json"],  "publisher": "device|twin" },
-    { "pattern": "{root}/{dev}/status",    "qos": 1, "retain": true,  "schemas": ["status.schema.json"], "publisher": "device|twin", "last_will": true },
-    { "pattern": "bfwp-sim/{dev}/cmd",     "qos": 1, "retain": false, "schemas": ["sim-command.schema.json"], "publisher": "operator|tools", "subscriber": "twin" }
+    {
+      "pattern": "{root}/{dev}/telemetry",
+      "qos": 1,
+      "retain": false,
+      "schemas": [
+        "telemetry.schema.json",
+        "telemetry-batch.schema.json"
+      ],
+      "publisher": "device|twin",
+      "cadence": "active: 1 s; idle: 60 s plus report-on-change (see 02-message-contract.md)"
+    },
+    {
+      "pattern": "{root}/{dev}/event",
+      "qos": 1,
+      "retain": false,
+      "schemas": [
+        "event.schema.json"
+      ],
+      "publisher": "device|twin",
+      "cadence": "immediately when detected"
+    },
+    {
+      "pattern": "{root}/{dev}/status",
+      "qos": 1,
+      "retain": true,
+      "schemas": [
+        "status.schema.json"
+      ],
+      "publisher": "device|twin",
+      "last_will": true
+    },
+    {
+      "pattern": "{root}/{dev}/health",
+      "qos": 1,
+      "retain": false,
+      "schemas": [
+        "health.schema.json"
+      ],
+      "publisher": "device|twin",
+      "cadence": "every 300 s and after boot; not buffered offline"
+    },
+    {
+      "pattern": "bfwp-sim/{dev}/cmd",
+      "qos": 1,
+      "retain": false,
+      "schemas": [
+        "sim-command.schema.json"
+      ],
+      "publisher": "operator|tools",
+      "subscriber": "twin"
+    }
   ]
 }

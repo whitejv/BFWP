@@ -17,8 +17,9 @@ and say so (`"resolution": "5min"`).
 ## Tools
 | Tool | Returns | Typical question |
 |---|---|---|
-| `get_device_status(dev)` | Online/offline, last message time, fw, RSSI, buffer/seq gaps in last 24 h | "Is the well monitor alive?" |
-| `get_data_coverage(start, end)` | Time spans with/without data, seq gaps | "Can I trust last night's data?" |
+| `get_device_status(dev)` | Online/offline, last message time, fw, latest health report (uptime, RSSI, buffer fill, watchdog timeouts, enclosure °F), seq gaps in last 24 h | "Is the well monitor alive and healthy?" |
+| `get_device_health(start, end)` | Health reports over time: reboots and reset reasons, RSSI, memory, enclosure temperature | "Has the device been rebooting? Is the box overheating?" |
+| `get_data_coverage(start, end)` | Time spans with/without data and seq gaps, judged against each reading's `mode` (active 1 s / idle 60 s) | "Can I trust last night's data?" |
 | `get_readings(start, end, resolution="auto", fields=[…])` | psi/amps/gpm/pump series (raw ≤ 6 h, else 1-min or coarser) | "Show pressure 10 pm–6 am." |
 | `get_events(start, end, types=[…])` | Device events | "Any alarms this week?" |
 | `get_pump_cycles(start, end)` | Each cycle: start, duration, gallons, psi/amps stats, **overlapping zone runs** | "How often did the pump run overnight?" |
