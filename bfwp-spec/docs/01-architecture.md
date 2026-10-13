@@ -24,6 +24,15 @@ misbehaving?"* can be answered from data.
 The well-house Wi-Fi is isolated from the home network, so a cloud broker is the
 rendezvous point. Neither side needs inbound ports.
 
+## Mac mini supervisor
+launchd runs ingest as a user agent, `com.bfwp.ingest`, loaded at login for the account
+that stays logged in on the Mac mini. `KeepAlive` restarts the process if it exits.
+`bfwp-start.sh` and `bfwp-stop.sh` at the repo root load and unload that agent. The plist
+template is `bfwp-ingest/launchd/com.bfwp.ingest.plist.example`; the start script writes
+the filled-in copy to `~/Library/LaunchAgents/`. Logs are `~/BFWP-data/logs/ingest.log`.
+
+The twin is a dev tool and is started by hand. Cursor starts the MCP server over stdio.
+
 ## Components and ownership
 All components live in one git repo (`BFWP`), one folder each.
 

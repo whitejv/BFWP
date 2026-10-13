@@ -24,6 +24,12 @@ Read the app folder's `CLAUDE.md` before working in it.
   only `*.example` templates are committed.
 - End each task with a summary of what changed and what a human must verify.
 
+## Build and run (repo root)
+- Host rebuild: `cmake -S . -B build && cmake --build build`. Test: `cmake --build build --target test`.
+  Firmware: `cmake --build build --target firmware` (needs `IDF_PATH`).
+- Mac mini ingest is a launchd agent. `./bfwp-start.sh` loads it; `./bfwp-stop.sh` unloads it.
+  See `README.md`.
+
 ## Spec versions
 Tagged on this repo as `spec-vMAJOR.MINOR` (e.g. `spec-v1.0`). Each app's `CLAUDE.md`
 names the spec version it targets.

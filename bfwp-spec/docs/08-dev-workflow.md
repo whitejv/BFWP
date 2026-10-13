@@ -6,6 +6,21 @@
 - Open the `BFWP` folder in Cursor (or `bfwp.code-workspace` for labeled folders).
 - Python apps: Python 3.11+, a `.venv` per app folder, `pip install -e .[dev]`, `pytest`.
 - Firmware: ESP-IDF v5.x (`idf.py`); the Espressif ESP-IDF extension in Cursor is optional.
+- Rebuild everything that runs on the Mac from the repo root:
+
+  ```bash
+  cmake -S . -B build
+  cmake --build build                  # .venv in twin, ingest, and mcp
+  cmake --build build --target test    # validate.py and pytest
+  cmake --build build --target firmware  # idf.py; requires IDF_PATH
+  ```
+
+  Apps without a `pyproject.toml` are skipped. The test target keeps `jsonschema` and
+  `PyYAML` in `bfwp-spec/.venv` so contract validation does not depend on the system
+  Python. `bfwp_core` joins the host build once
+  `bfwp-firmware/components/bfwp_core/CMakeLists.txt` exists. Ingest on the Mac mini is
+  started with `./bfwp-start.sh` and stopped with `./bfwp-stop.sh` (launchd, see
+  `01-architecture.md`).
 
 ## Git — one repo, five apps
 - Single repo **`BFWP`** (GitHub: `whitejv/BFWP`, private), default branch `main`.

@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased — 2026-10-08
+- Host rebuild is a root CMake project (`cmake -S . -B build`). Ingest on the Mac mini is
+  supervised by launchd (`com.bfwp.ingest`); `bfwp-start.sh` / `bfwp-stop.sh` load and
+  unload it. See `docs/01-architecture.md` and `docs/08-dev-workflow.md`.
 - Project moved from five repos to a single `BFWP` monorepo; docs updated to refer to
   app folders. Spec versions are now tagged `spec-vX.Y`.
 - **Contract (v1 draft, before first tag):**

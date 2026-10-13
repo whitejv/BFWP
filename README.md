@@ -21,3 +21,43 @@ labeled folders.
 Start with `bfwp-spec/docs/01-architecture.md`. Hardware: `hardware.md`. Development workflow:
 `bfwp-spec/docs/08-dev-workflow.md`. Claude Code instructions: `CLAUDE.md` (project-wide)
 plus one `CLAUDE.md` per app folder.
+
+## Rebuild
+
+The repo root is a host CMake project. It refreshes a virtualenv in each Python app that
+has a `pyproject.toml` (`bfwp-twin`, `bfwp-ingest`, `bfwp-mcp`). It does not install into
+`/usr/local`. Firmware stays an ESP-IDF project and is a separate target.
+
+```bash
+cmake -S . -B build
+cmake --build build                  # virtualenvs
+cmake --build build --target test    # contract validation and pytest
+cmake --build build --target install # same virtualenv refresh
+```
+
+The test target installs `jsonschema` and `PyYAML` into `bfwp-spec/.venv` when they are
+missing, then runs `tools/validate.py`. Pytest runs for an app only after that app's
+virtualenv exists.
+
+`cmake --build build --target firmware` runs `idf.py -C bfwp-firmware build`. It needs
+`IDF_PATH` set (source the ESP-IDF `export.sh` first). A Mac without the IDF toolchain
+can still build the host apps.
+
+When `bfwp-firmware/components/bfwp_core/CMakeLists.txt` exists, the host build picks it
+up so that library can be tested on the Mac.
+
+## Run ingest on the Mac
+
+launchd supervises ingest. `KeepAlive` restarts it if the process exits. The start script
+writes `~/Library/LaunchAgents/com.bfwp.ingest.plist` from
+`bfwp-ingest/launchd/com.bfwp.ingest.plist.example` and loads it. Logs are
+`~/BFWP-data/logs/ingest.log`. The Mac mini user needs to be logged in.
+
+```bash
+./bfwp-start.sh
+./bfwp-stop.sh
+```
+
+Start will fail until `bfwp-ingest` is installed into `bfwp-ingest/.venv` (the CMake build
+does that once `bfwp-ingest/pyproject.toml` exists). The twin is started by hand. Cursor
+starts the MCP server when a chat needs it.

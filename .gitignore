@@ -1,1 +1,6 @@
 .DS_Store
+
+# Host CMake build (cmake -S . -B build)
+/build/
+/CMakeCache.txt
+/CMakeFiles/

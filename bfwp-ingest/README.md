@@ -10,3 +10,7 @@ rollups, pump cycles) and syncs Hydrawise zone runs.
 
 **This app owns the database schema and migrations.** The reference schema lives in
 `bfwp-spec/contracts/sqlite/schema-v1.sql`.
+
+On the Mac mini, launchd supervises the process. From the repo root, `./bfwp-start.sh`
+installs and loads the agent; `./bfwp-stop.sh` unloads it. The template is
+`launchd/com.bfwp.ingest.plist.example`. Logs: `~/BFWP-data/logs/ingest.log`.
