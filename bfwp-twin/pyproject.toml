@@ -1,0 +1,22 @@
+[project]
+name = "bfwp-twin"
+version = "0.1.0"
+description = "Digital twin of the BFWP well-house controller"
+requires-python = ">=3.11"
+dependencies = ["PyYAML>=6", "paho-mqtt>=2.1,<3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "jsonschema>=4"]
+
+[project.scripts]
+bfwp-twin = "bfwp_twin.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

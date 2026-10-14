@@ -2,12 +2,13 @@ name: cadence_off_hours
 description: >
   Activity-based publishing cadence. A low-flow zone runs at an unusual hour (05:10), so the
   pump cycles off for minutes at a time while water keeps flowing through the meter — the device
-  must stay in active mode. After the run it returns to idle after the 2-minute hold. Later a
-  very slow upstream leak drifts pressure down while idle, which must trigger report-on-change
-  readings between the 60 s idle reports.
+  must stay in active mode. After the run it returns to idle after the 2-minute hold. An
+  upstream leak then drops pressure about 1 psi per minute, so an idle report-on-change
+  reading appears between the 60 s grid reports. The run ends before that leak can fall
+  5 psi (which would emit psi_decay and return to active) or reach cut-in.
 device: twin1
 start: "2026-10-09T04:30:00-05:00"
-end:   "2026-10-09T08:00:00-05:00"
+end:   "2026-10-09T06:02:00-05:00"
 speed: 0
 seed: 11
 system:
@@ -15,15 +16,22 @@ system:
   zones: {4: {gpm: 4}}
 timeline:
   - {at: "05:10", zone_on: {zone: 4, minutes: 15}}
-  - {at: "06:00", leak:    {gpm: 0.05, location: upstream}}
+  # 1 gpm at nominal pressure. 0.05 gpm never moves 1 psi inside one 60 s idle slot
+  # on the 86 gal tank, so it cannot insert a report-on-change reading.
+  - {at: "06:00", leak:    {gpm: 1.0, location: upstream}}
 expect:
   cadence:
     - {mode: idle,   between: ["04:30", "05:10"]}
-    - {mode: active, between: ["05:10", "05:25"]}   # no idle readings anywhere in this span
-    - {mode: idle,   after: "05:28"}                 # 15-min run + 2-min hold + margin
+    # Active once the first gallon has pulsed (~14 s). A 1 psi idle
+    # report-on-change can land in the gap before that pulse.
+    - {mode: active, between: ["05:11", "05:25"]}
+    # Back to idle after the 2-minute hold. A flow_idle event at the 10-minute
+    # mark (05:30) re-enters active, so the idle check stops there.
+    - {mode: idle,   between: ["05:28", "05:30"]}
     - {report_on_change: true, after: "06:00"}       # idle readings closer than 60 s as psi drifts >= 1 psi
   events:
-    - {type: pump_on, between: ["05:10", "05:13"]}
+    # 4 gpm takes ~5.6 min to draw the tank from 60 psi down to the 40 psi cut-in.
+    - {type: pump_on, between: ["05:10", "05:16"]}
   no_events:
     - {type: sensor_fault}
   analysis:

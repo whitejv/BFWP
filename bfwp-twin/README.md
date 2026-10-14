@@ -11,10 +11,28 @@ Driven three ways (see `bfwp-spec/docs/06-digital-twin.md`):
 
 Every run writes a **truth log** of what was injected, for checking analysis results.
 
-## Setup (planned)
+## Offline check
+From the repo root, `cmake --build build` installs this app. Then:
+
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e .
-cp .env.example .env   # fill in HiveMQ sim credentials
-bfwp-twin run scenarios/overnight_leak.yaml
+bfwp-twin/.venv/bin/bfwp-twin run bfwp-spec/contracts/scenarios/baseline_normal_night.yaml
 ```
+
+That writes two files under `bfwp-twin/truth-logs/` and does not connect to a broker:
+
+- `baseline_normal_night-<run-id>.jsonl` — injected zone runs
+- `baseline_normal_night-<run-id>.messages.jsonl` — telemetry, telemetry batches,
+  events, health, and status
+
+`cmake --build build --target test` runs this offline check.
+
+## Broker check
+`--mqtt` publishes that same message file to HiveMQ at QoS 1, under `bfwp-sim/` only.
+Copy `.env.example` to `.env` to point at another broker. With no `.env`, the public
+broker in the example is used. It does not check the password.
+
+```bash
+BFWP_MQTT=1 bfwp-twin/.venv/bin/pytest -q bfwp-twin/tests/test_baseline_broker.py
+```
+
+A subscriber on `bfwp-sim/twin1/#` must see the same messages as the offline file.

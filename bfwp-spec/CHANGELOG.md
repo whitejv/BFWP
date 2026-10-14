@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased — 2026-10-08
+- `cadence_off_hours`: upstream leak is 1 gpm and the run ends at 06:02, so pressure
+  moves about 1 psi per minute (an idle report-on-change fits between 60 s reports)
+  without a `psi_decay` or another pump start. `pump_on` is expected by 05:16, which
+  is when a 4 gpm zone draws the 86 gal tank from 60 psi to 40 psi. Active mode is
+  required from 05:11, after the first gallon pulse. Idle is required from 05:28
+  until 05:30, when a `flow_idle` event returns the device to active.
 - Development order is one element at a time, with the twin standing in for the ESP32
   until hardware exists. See `docs/08-dev-workflow.md`.
 - Host rebuild is a root CMake project (`cmake -S . -B build`). Ingest on the Mac mini is
