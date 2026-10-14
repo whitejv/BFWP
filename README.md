@@ -22,6 +22,14 @@ Start with `bfwp-spec/docs/01-architecture.md`. Hardware: `hardware.md`. Develop
 `bfwp-spec/docs/08-dev-workflow.md`. Claude Code instructions: `CLAUDE.md` (project-wide)
 plus one `CLAUDE.md` per app folder.
 
+## Development order
+
+No board is required to start. Build one element at a time, and pass that element's check
+before starting the next. The digital twin stands in for the ESP32. The sequence is spec,
+twin, ingest into `well-sim.db`, MCP questions checked against the truth log, `bfwp_core`
+host tests, then bench and the well house. Checks, scenario order, and what to defer are
+in `bfwp-spec/docs/08-dev-workflow.md`.
+
 ## Rebuild
 
 The repo root is a host CMake project. It refreshes a virtualenv in each Python app that

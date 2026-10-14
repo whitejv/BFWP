@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased — 2026-10-08
+- Development order is one element at a time, with the twin standing in for the ESP32
+  until hardware exists. See `docs/08-dev-workflow.md`.
 - Host rebuild is a root CMake project (`cmake -S . -B build`). Ingest on the Mac mini is
   supervised by launchd (`com.bfwp.ingest`); `bfwp-start.sh` / `bfwp-stop.sh` load and
   unload it. See `docs/01-architecture.md` and `docs/08-dev-workflow.md`.

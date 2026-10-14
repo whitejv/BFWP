@@ -48,26 +48,93 @@
 
 Claude Code loads the top-level CLAUDE.md plus the one for the folder it's working in.
 
-## Build order and parallel agents
-1. **Spec** — finalize and tag `spec-v1.0` (alone; everything depends on it).
-2. **Twin + ingest** — in parallel (two Claude Code sessions, one per app folder). The twin
-   gives ingest realistic traffic immediately.
-3. **MCP** — against `well-sim.db` from twin scenarios; check analysis against truth logs.
-4. **Firmware** — when hardware arrives; its `bfwp_core` logic must pass the shared scenarios in host tests.
+## Build order
 
-Running two sessions at once in one repo:
-- Each session works **only in its own app folder**, on its own branch.
-- Because both sessions share one working copy, give each its own **git worktree** so
-  their branches and uncommitted changes don't collide:
-  ```bash
-  git worktree add ../BFWP-twin   -b twin/initial
-  git worktree add ../BFWP-ingest -b ingest/initial
-  # open each folder in its own Cursor window and run `claude` there
-  # when merged:  git worktree remove ../BFWP-twin
-  ```
-- If an agent believes the contract must change, it **stops and reports**; the change is
-  made in `bfwp-spec/`, logged, and tagged first.
-- Each agent ends a task with a summary of changes and what a human must verify.
+One element at a time. The digital twin stands in for the ESP32 until a board exists.
+Shared scenarios in `contracts/scenarios/` are the checklist. Do not start the next
+element until the current element's check passes. After each merge,
+`cmake --build build --target test` stays green.
+
+A contract problem stops the element. The fix lands in `bfwp-spec/` first (schemas,
+examples, docs, `CHANGELOG.md`, passing `tools/validate.py`). Open hardware questions in
+`../../hardware.md` do not block this sequence. Tag `spec-v1.0` at the start of twin
+work, once the message, SQLite, and scenario contracts are the ones the twin will build to.
+
+The default is one branch and one element. Worktrees are for the rare case where two
+folders must move at once:
+
+```bash
+git worktree add ../BFWP-twin   -b twin/initial
+git worktree add ../BFWP-ingest -b ingest/initial
+# open each folder in its own Cursor window
+# when merged:  git worktree remove ../BFWP-twin
+```
+
+Each agent ends a task with a summary of changes and what a human must verify.
+
+### 1. Spec gate
+
+Already drafted. Check: `cmake --build build --target test` reports all contracts valid.
+That check remains the standing bar for every later element.
+
+### 2. Twin, as the hardware
+
+Build `bfwp-twin` in three checks, in this order. Publish only under `bfwp-sim/twin1/…`.
+Every run writes the truth log described in `06-digital-twin.md`.
+
+1. **Physics.** 100 ms step, `speed: 0`, scenario `baseline_normal_night` only. Check: the
+   truth log lists the injected zone runs, and tank pressure cycles between the scenario's
+   cut-in and cut-out. No MQTT yet.
+2. **Device behavior.** The same process emits spec v1 telemetry, events, health, and
+   status. Check one scenario at a time, offline: messages captured to a file, each
+   validated against the v1 schemas, and `expect.events` / `expect.cadence` /
+   `expect.no_events` pass.
+   - `baseline_normal_night` — a normal night, no faults
+   - `cadence_off_hours` — active 1 s, idle 60 s, report-on-change
+   - `overnight_leak` — downstream leak plus a Wi-Fi outage that flushes a batch
+   - `upstream_leak_decay` — pressure loss with no metered gallons
+   - `sensor_fault_and_reboot` — null psi, then boot and a seq jump
+3. **Broker.** `bfwp-twin run` publishes `baseline_normal_night` to HiveMQ. Check: a
+   subscriber sees the same messages the offline file already validated.
+
+Live `cmd` and the Hydrawise mirror wait until a later element needs them.
+
+### 3. Ingest
+
+Build `bfwp-ingest` against twin output, into `well-sim.db` only.
+
+1. **File first.** Load the offline capture from element 2. Check: `INSERT OR IGNORE` on
+   `(dev, seq)`, device `ts` stored as UTC epoch ms, invalid messages in `rejects`, and a
+   replay of the same file does not duplicate rows. Recompute the 1-minute rollup for the
+   Wi-Fi-outage minute in `overnight_leak` after the late batch arrives.
+2. **Live path.** `./bfwp-start.sh`, then the twin publishes `baseline_normal_night`.
+   Check: `well-sim.db` matches the file-ingest result for that scenario. `well.db` stays
+   empty.
+
+Real Hydrawise HTTP sync is its own later check. Until then, zone rows used by MCP come
+from the scenario timeline (source `twin`), not from the controller API.
+
+### 4. MCP, one question at a time
+
+Build `bfwp-mcp` read-only on `well-sim.db`. Ask with the truth log withheld, then
+compare. Pass a question before adding the next tool.
+
+1. Baseline night: pump cycles and zone gallons agree with the truth log.
+2. `overnight_leak`: unscheduled metered flow after the injected leak; `expect.analysis`
+   holds.
+3. `upstream_leak_decay`: overnight psi drop with zero metered gallons.
+4. Then coverage, health, and the remaining tools in `05-mcp-tools.md`.
+
+### 5. Firmware logic, still no board
+
+`bfwp_core` on the Mac, no ESP-IDF calls, same five scenarios and the same `expect`
+blocks the twin already passes. This is the check that twin and device rules did not
+drift. HAL, Wi-Fi, TLS, and flash wait for a board.
+
+### 6. Hardware, last
+
+Bench with simulated sensors, then the well house. The twin keeps publishing on
+`bfwp-sim/…` into `well-sim.db`. The device publishes on `bfwp/…` into `well.db`.
 
 ## Secrets
 | App folder | File (gitignored) | Template (committed) |
@@ -78,8 +145,16 @@ Running two sessions at once in one repo:
 Check before pushing: `git status` should never list `.env` or `secrets.h`.
 
 ## Testing ladder
-1. Schema validation (`python3 bfwp-spec/tools/validate.py`).
-2. Unit tests per app folder.
-3. Twin → HiveMQ → ingest → `well-sim.db` end-to-end, scenario by scenario.
-4. MCP analysis vs truth log.
-5. Real device on the bench (simulated sensors) → then in the well house.
+
+Each rung is the check for one element above. Stay on a rung until it passes.
+
+1. Schema validation (`cmake --build build --target test`, which runs
+   `tools/validate.py`).
+2. Twin physics truth log for `baseline_normal_night`, then offline message files for
+   each scenario in the order in §2, then one live HiveMQ publish of the baseline.
+3. File ingest into `well-sim.db` (idempotent `(dev, seq)`, rejects, late rollup), then
+   the same baseline through launchd and HiveMQ. `well.db` stays empty.
+4. MCP answers for baseline, `overnight_leak`, and `upstream_leak_decay`, compared with
+   the truth log withheld, then the remaining tools.
+5. `bfwp_core` host tests pass the same five scenario `expect` blocks.
+6. Bench with simulated sensors, then the well house.
