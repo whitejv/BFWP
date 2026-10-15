@@ -7,6 +7,7 @@ the device; and publishes spec v1 JSON to HiveMQ Cloud over TLS. Buffers to flas
 offline; publishes 1 s while active, 60 s (+ report-on-change) while idle.
 
 - Design: `../bfwp-spec/docs/07-firmware-design.md`
+- MWPSensors reuse: `../bfwp-spec/docs/09-mwpsensors-reuse.md`
 - Hardware: `../hardware.md`
 
 ## Setup

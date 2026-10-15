@@ -14,6 +14,7 @@ spec (currently v1, draft).
 | [05 MCP tools](docs/05-mcp-tools.md) | Query tools Claude uses for analysis |
 | [06 Digital twin](docs/06-digital-twin.md) | Simulation model, scenarios, live control, truth log |
 | [07 Firmware design](docs/07-firmware-design.md) | ESP-IDF firmware design, MWP reuse, cadence and event rules |
+| [09 MWPSensors reuse](docs/09-mwpsensors-reuse.md) | Shared sensor drivers, the reading callback, and what to add back to MWPSensors |
 | [08 Development workflow](docs/08-dev-workflow.md) | Cursor, Claude Code, monorepo git, no-hardware build order, secrets |
 | [Open questions](docs/open-questions.md) | Decisions still pending |
 | [Hardware](../hardware.md) | Board, sensors, wiring, BOM, open hardware questions (project root) |

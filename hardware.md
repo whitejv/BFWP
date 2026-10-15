@@ -5,7 +5,8 @@ and the open hardware questions. Status tags: **Known** (decided or confirmed), 
 (intended, following the MWP home project), **Assumed** (working assumption — verify),
 **Open** (see questions at the end).
 
-Related: firmware design `bfwp-spec/docs/07-firmware-design.md`, signal definitions
+Related: firmware design `bfwp-spec/docs/07-firmware-design.md`, MWPSensors reuse
+`bfwp-spec/docs/09-mwpsensors-reuse.md`, signal definitions
 `bfwp-spec/docs/03-sensors-and-units.md`.
 
 ## 1. Site

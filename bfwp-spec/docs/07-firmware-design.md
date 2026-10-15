@@ -31,7 +31,8 @@ hardware questions live in [`../../hardware.md`](../../hardware.md).
 
 **Not carried over:** the 104-byte `genericSens_` binary struct, QoS 2 binary + QoS 0 JSON
 dual publishing, `cycle_count`, plain-text local broker on port 1883, raw-volt output with
-downstream conversion.
+downstream conversion. The driver seam and the infrastructure worth adding back to
+MWPSensors are in [`09-mwpsensors-reuse.md`](09-mwpsensors-reuse.md).
 
 ## Project layout
 ```

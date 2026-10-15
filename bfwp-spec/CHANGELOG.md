@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased — 2026-10-15
+- MWPSensors reuse note: share the sensor drivers through a reading callback, and add
+  SNTP, a never-reused sequence, a short offline ring, and Last Will back to MWPSensors
+  on its JSON topic only. See `docs/09-mwpsensors-reuse.md`.
 - The well MCP covers the well monitor only. Dropped `zone_runs` and the tools that
   joined it (`get_unscheduled_pump_runs`, `get_zone_signature`,
   `compare_zone_signatures`, `sync_zone_runs`). `get_pump_cycles` returns pump runs.
