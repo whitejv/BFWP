@@ -2,7 +2,7 @@
 
 ## What this is
 Python service on the Mac mini: HiveMQ Cloud subscriber -> SQLite (WAL mode), plus
-derived tables and Hydrawise zone-run sync.
+derived tables (rollups and pump cycles). It does not call Hydrawise.
 
 ## Contract
 - Targets **spec v1** (draft; will be tagged `spec-v1.0`).

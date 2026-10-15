@@ -97,7 +97,7 @@ Every run writes the truth log described in `06-digital-twin.md`.
 3. **Broker.** `bfwp-twin run` publishes `baseline_normal_night` to HiveMQ. Check: a
    subscriber sees the same messages the offline file already validated.
 
-Live `cmd` and the Hydrawise mirror wait until a later element needs them.
+Live `cmd` waits until a later element needs it. A Hydrawise mirror is out of scope.
 
 ### 3. Ingest
 
@@ -111,17 +111,15 @@ Build `bfwp-ingest` against twin output, into `well-sim.db` only.
    Check: `well-sim.db` matches the file-ingest result for that scenario. `well.db` stays
    empty.
 
-Real Hydrawise HTTP sync is its own later check. Until then, zone rows used by MCP come
-from the scenario timeline (source `twin`), not from the controller API.
-
 ### 4. MCP, one question at a time
 
-Build `bfwp-mcp` read-only on `well-sim.db`. Ask with the truth log withheld, then
-compare. Pass a question before adding the next tool.
+Build `bfwp-mcp` read-only on `well-sim.db`. The server answers well-monitor questions
+only. Ask with the truth log withheld, then compare. Pass a question before adding the
+next tool.
 
-1. Baseline night: pump cycles and zone gallons agree with the truth log.
-2. `overnight_leak`: unscheduled metered flow after the injected leak; `expect.analysis`
-   holds.
+1. Baseline night: pump cycles agree with the rows ingest stored from that night.
+2. `overnight_leak`: the meter advances after the injected leak; `expect.analysis` is
+   the scenario's label, not a classification this server makes.
 3. `upstream_leak_decay`: overnight psi drop with zero metered gallons.
 4. Then coverage, health, and the remaining tools in `05-mcp-tools.md`.
 

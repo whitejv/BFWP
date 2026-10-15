@@ -25,7 +25,6 @@ corrupt it.
 | `health` | Periodic device health reports | `(dev, seq)` |
 | `pump_cycles` | One row per pump run | `(dev, start_ts)` |
 | `readings_1min` | Per-minute rollup | `(dev, minute_ts)` |
-| `zone_runs` | Hydrawise actual zone runs | `(controller_id, zone_id, start_ts)` |
 | `rejects` | Invalid messages | — |
 
 ## Write rules
@@ -47,5 +46,4 @@ fills (option: drop raw readings older than 2 years, keep rollups forever).
 ## Query patterns (what the indexes serve)
 - Range scan: `WHERE dev=? AND ts BETWEEN ? AND ?` on `readings` / `events`.
 - Long ranges (> 6 h): use `readings_1min`.
-- Join with zones: overlap test
-  `zone_runs.start_ts < :end AND zone_runs.end_ts > :start`.
+- Gallons in a window: last `gal_total` before the end, minus last `gal_total` before the start.

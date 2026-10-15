@@ -102,17 +102,8 @@ CREATE TABLE IF NOT EXISTS readings_1min (
   PRIMARY KEY (dev, minute_ts)
 ) WITHOUT ROWID;
 
--- Hydrawise zone runs (actual, from run history), synced by ingest.
-CREATE TABLE IF NOT EXISTS zone_runs (
-  controller_id TEXT    NOT NULL,
-  zone_id       TEXT    NOT NULL,
-  zone_name     TEXT,
-  start_ts      INTEGER NOT NULL,
-  end_ts        INTEGER NOT NULL,
-  source        TEXT    NOT NULL DEFAULT 'hydrawise',  -- or 'twin' in the sim DB
-  PRIMARY KEY (controller_id, zone_id, start_ts)
-);
-CREATE INDEX IF NOT EXISTS idx_zone_runs_time ON zone_runs(start_ts, end_ts);
+-- Draft databases created before zone runs were removed may still have this table.
+DROP TABLE IF EXISTS zone_runs;
 
 -- Messages that failed validation (kept for debugging, pruned after 30 days).
 CREATE TABLE IF NOT EXISTS rejects (

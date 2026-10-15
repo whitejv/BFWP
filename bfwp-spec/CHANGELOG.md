@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — 2026-10-15
+- The well MCP covers the well monitor only. Dropped `zone_runs` and the tools that
+  joined it (`get_unscheduled_pump_runs`, `get_zone_signature`,
+  `compare_zone_signatures`, `sync_zone_runs`). `get_pump_cycles` returns pump runs.
+  `get_flow_totals` returns gallons per day. Claude fuses those results with a separate
+  Hydrawise MCP when a question needs zone times. Applying the schema drops `zone_runs`
+  if a draft database still has it.
+
 ## Unreleased — 2026-10-08
 - `cadence_off_hours`: upstream leak is 1 gpm and the run ends at 06:02, so pressure
   moves about 1 psi per minute (an idle report-on-change fits between 60 s reports)

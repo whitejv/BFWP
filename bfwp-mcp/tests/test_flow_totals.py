@@ -1,7 +1,4 @@
-"""Daily gallons split into zone runs and flow outside them.
-
-The tool never sees the truth log.
-"""
+"""Daily gallons match the meter. The tool never sees the truth log."""
 
 import json
 import sqlite3
@@ -29,7 +26,6 @@ def _load(tmp_path: Path, scenario: Path, stem: str) -> tuple[Path, list[dict]]:
     messages = next(tmp_path.glob(f"{stem}-*.messages.jsonl"))
     db = tmp_path / "well-sim.db"
     subprocess.run([str(INGEST), "load", str(messages), "--db", str(db)], check=True)
-    subprocess.run([str(INGEST), "load-zones", str(truth_log), "--db", str(db)], check=True)
     injected = [json.loads(line) for line in truth_log.read_text().splitlines()]
     return db, injected
 
@@ -48,9 +44,8 @@ def _gallons(db: Path, start_ms: int, end_ms: int) -> int:
     return int(after[0]) - (0 if before is None else int(before[0]))
 
 
-def test_baseline_night_gallons_are_scheduled(tmp_path: Path):
-    db, injected = _load(tmp_path, BASELINE, "baseline_normal_night")
-    zones = [row for row in injected if row["inject"] == "zone_on"]
+def test_baseline_night_gallon_totals(tmp_path: Path):
+    db, _injected = _load(tmp_path, BASELINE, "baseline_normal_night")
     answer = get_flow_totals(
         "2026-10-08T21:00:00",
         "2026-10-09T07:00:00",
@@ -61,19 +56,14 @@ def test_baseline_night_gallons_are_scheduled(tmp_path: Path):
 
     by_date = {bucket["date"]: bucket for bucket in answer["buckets"]}
     assert list(by_date) == ["2026-10-08", "2026-10-09"]
-    scheduled = sum(
-        _gallons(db, int(zone["ts"]), int(zone["ts"]) + int(round(float(zone["minutes"]) * 60_000)))
-        for zone in zones
-    )
-    assert by_date["2026-10-08"]["scheduled"] == scheduled > 0
-    assert by_date["2026-10-08"]["unscheduled"] == 0
-    assert by_date["2026-10-09"]["scheduled"] == 0
-    assert by_date["2026-10-09"]["unscheduled"] == 0
     for bucket in answer["buckets"]:
-        assert bucket["gallons"] == bucket["scheduled"] + bucket["unscheduled"]
+        assert "scheduled" not in bucket
+        assert bucket["gallons"] == _gallons(db, parse_ms(bucket["start"]), parse_ms(bucket["end"]))
+    assert by_date["2026-10-08"]["gallons"] > 0
+    assert by_date["2026-10-09"]["gallons"] == 0
 
 
-def test_overnight_leak_gallons_are_unscheduled(tmp_path: Path):
+def test_overnight_leak_gallons_continue_after_midnight(tmp_path: Path):
     db, injected = _load(tmp_path, LEAK, "overnight_leak")
     leak = next(row for row in injected if row["inject"] == "leak")
     answer = get_flow_totals(
@@ -83,9 +73,9 @@ def test_overnight_leak_gallons_are_unscheduled(tmp_path: Path):
         source="sim",
         db_path=db,
     )
-    unscheduled = sum(bucket["unscheduled"] for bucket in answer["buckets"])
-    metered = _gallons(db, int(leak["ts"]), parse_ms("2026-10-09T07:00:00"))
+    by_date = {bucket["date"]: bucket for bucket in answer["buckets"]}
+    midnight = parse_ms("2026-10-09T00:00:00")
+    end = parse_ms("2026-10-09T07:00:00")
     assert leak["location"] == "downstream"
-    assert unscheduled > 0
-    assert abs(unscheduled - metered) <= 2
-    assert sum(bucket["scheduled"] for bucket in answer["buckets"]) > 0
+    assert by_date["2026-10-08"]["gallons"] > _gallons(db, int(leak["ts"]), midnight) > 0
+    assert by_date["2026-10-09"]["gallons"] == _gallons(db, midnight, end) > 0

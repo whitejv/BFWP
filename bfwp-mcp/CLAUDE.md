@@ -1,7 +1,8 @@
 # CLAUDE.md — bfwp-mcp
 
 ## What this is
-Python MCP server exposing analysis-oriented tools over the BFWP SQLite databases.
+Python MCP server for the well monitor. Read-only tools over the BFWP SQLite databases.
+Zone schedules belong to a separate Hydrawise MCP. This server does not call it.
 
 ## Contract
 - Targets **spec v1** (draft; will be tagged `spec-v1.0`).
@@ -11,7 +12,6 @@ Python MCP server exposing analysis-oriented tools over the BFWP SQLite database
 
 ## Rules
 - **Open databases read-only** (`file:...?mode=ro`). This server never writes well data.
-  (Exception: `sync_zone_runs` asks ingest to sync; it does not write itself.)
 - Accept times as ISO-8601; times without an offset are America/Chicago. Convert to UTC ms.
 - Every tool takes `source: "real" | "sim"` (default `real`).
 - Keep responses small: auto-downsample long ranges to the 1-minute rollup or coarser.

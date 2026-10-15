@@ -74,6 +74,5 @@ gallons. Two values are reported:
 |---|---|
 | Pump cycle | Interval from `pump_on` to `pump_off` |
 | Cycle gallons | `gal_total(off) − gal_total(on)` |
-| Idle flow | Gallons accumulated while no Hydrawise zone is running |
-| Overnight decay | psi at window start − psi at window end, with pump off and no zone running |
-| Zone signature | Mean psi, amps, gpm during the steady part of a zone run (skip first 30 s) |
+| Window gallons | Last `gal_total` before the end of a window, minus the last `gal_total` before the start |
+| Overnight decay | psi at window end minus psi at window start, plus gallons metered in that window |

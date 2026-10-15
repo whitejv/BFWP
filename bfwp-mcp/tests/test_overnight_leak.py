@@ -1,4 +1,4 @@
-"""Overnight leak: unscheduled metered flow after the injection matches expect.analysis.
+"""Overnight leak: the meter advances after the injection. The server does not label it.
 
 The tool never sees the truth log or the scenario file.
 """
@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 
 from bfwp_mcp.clock import parse_ms
-from bfwp_mcp.unscheduled import get_unscheduled_pump_runs
+from bfwp_mcp.decay import get_overnight_decay
 
 REPO = Path(__file__).resolve().parents[2]
 SCENARIO = REPO / "bfwp-spec" / "contracts" / "scenarios" / "overnight_leak.yaml"
@@ -30,71 +30,47 @@ def _expect_analysis(path: Path) -> dict:
     }
 
 
-def _metered_after(db: Path, dev: str, start_ms: int, end_ms: int) -> int:
-    """Gallons that left after `start_ms`: last total before the end, minus last total before the leak."""
+def _metered(db: Path, start_ms: int, end_ms: int) -> int:
     conn = sqlite3.connect(db)
     before = conn.execute(
-        "SELECT gal_total FROM readings WHERE dev = ? AND ts < ? ORDER BY ts DESC, seq DESC LIMIT 1",
-        (dev, start_ms),
+        "SELECT gal_total FROM readings WHERE dev = 'twin1' AND ts < ? ORDER BY ts DESC, seq DESC LIMIT 1",
+        (start_ms,),
     ).fetchone()
     after = conn.execute(
-        "SELECT gal_total FROM readings WHERE dev = ? AND ts < ? ORDER BY ts DESC, seq DESC LIMIT 1",
-        (dev, end_ms),
+        "SELECT gal_total FROM readings WHERE dev = 'twin1' AND ts < ? ORDER BY ts DESC, seq DESC LIMIT 1",
+        (end_ms,),
     ).fetchone()
     conn.close()
     assert before is not None and after is not None
     return int(after[0]) - int(before[0])
 
 
-def test_overnight_leak_unscheduled_flow_matches_analysis(tmp_path: Path):
+def test_overnight_leak_moves_the_meter(tmp_path: Path):
     subprocess.run(
         [str(TWIN), "run", str(SCENARIO), "--truth-log-dir", str(tmp_path)],
         check=True,
         capture_output=True,
         text=True,
     )
-    truth_log = next(
-        path for path in tmp_path.glob("overnight_leak-*.jsonl") if path.suffixes == [".jsonl"]
-    )
+    truth_log = next(path for path in tmp_path.glob("overnight_leak-*.jsonl") if path.suffixes == [".jsonl"])
     messages = next(tmp_path.glob("overnight_leak-*.messages.jsonl"))
     db = tmp_path / "well-sim.db"
     subprocess.run([str(INGEST), "load", str(messages), "--db", str(db)], check=True)
-    subprocess.run([str(INGEST), "load-zones", str(truth_log), "--db", str(db)], check=True)
 
     injected = [json.loads(line) for line in truth_log.read_text().splitlines()]
     leak = next(row for row in injected if row["inject"] == "leak")
-    zone = next(row for row in injected if row["inject"] == "zone_on")
-    leak_ms = int(leak["ts"])
-    zone_start = int(zone["ts"])
-    zone_end = zone_start + int(round(float(zone["minutes"]) * 60_000))
     analysis = _expect_analysis(SCENARIO)
-    end_ms = parse_ms("2026-10-09T07:00:00-05:00")
+    start_ms = parse_ms("2026-10-09T00:00:00")
+    end_ms = parse_ms("2026-10-09T05:00:00")
 
-    answer = get_unscheduled_pump_runs(
-        "2026-10-08T21:00:00-05:00",
-        "2026-10-09T07:00:00-05:00",
-        dev="twin1",
-        source="sim",
-        db_path=db,
-    )
+    answer = get_overnight_decay("2026-10-09", dev="twin1", source="sim", db_path=db)
+    night = answer["nights"][0]
+    minutes = (end_ms - start_ms) / 60_000
 
     assert analysis["leak_detected"] is True
     assert analysis["leak_location"] == leak["location"] == "downstream"
-    after = [
-        span for span in answer["flow"] if parse_ms(span["start"]) >= leak_ms
-    ]
-    assert len(after) == 1
-    span = after[0]
-    metered = _metered_after(db, "twin1", leak_ms, end_ms)
-    assert metered > 0
-    assert abs(span["gallons"] - metered) <= 2
+    assert int(leak["ts"]) < start_ms
+    assert night["gallons"] == _metered(db, start_ms, end_ms)
+    assert night["gallons"] > 0
     lo, hi = analysis["leak_gpm_approx"]
-    assert lo <= span["gpm"] <= hi
-
-    assert answer["cycles"]
-    for cycle in answer["cycles"]:
-        start = parse_ms(cycle["start"])
-        end = end_ms if cycle["end"] is None else parse_ms(cycle["end"])
-        overlaps_zone = start < zone_end and end > zone_start
-        assert not overlaps_zone
-        assert start >= leak_ms
+    assert lo <= night["gallons"] / minutes <= hi

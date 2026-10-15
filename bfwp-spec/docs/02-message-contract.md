@@ -88,10 +88,10 @@ Envelope + `type` + `data` (an object; shape depends on `type`).
 | `buffer_overflow` | Offline buffer full; oldest data dropped | `dropped`, `from_seq`, `to_seq` |
 
 Notes:
-- `flow_idle` is **not** by itself a leak: with a pressure tank, a zone can draw water while
-  the pump is off. Ingest/MCP decide "leak" by checking whether any Hydrawise zone was
-  running. `psi_decay` with **no** flow pulses points to a leak *upstream of the meter* or a
-  check-valve / tank problem.
+- `flow_idle` is **not** by itself a leak: with a pressure tank, water can leave while the
+  pump is off. Whether a zone was open is a question for the Hydrawise MCP. `psi_decay`
+  with **no** flow pulses points to a leak *upstream of the meter* or a check-valve / tank
+  problem.
 - Thresholds (`DECAY_PSI`, limits, `N`) are firmware config; defaults in
   `07-firmware-design.md`. The event reports the limit it used.
 - Events are sent individually (not batched), including when flushing the buffer.

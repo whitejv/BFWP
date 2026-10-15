@@ -29,8 +29,9 @@ as the device would.
 1. **Scenario files** — YAML timelines (format below). Repeatable; used in CI-style tests.
 2. **Live control** — publish sim commands to `bfwp-sim/<dev>/cmd` (schema
    `sim-command.schema.json`) or use the CLI (`bfwp-twin cmd leak --gpm 0.4`).
-3. **Hydrawise mirror** — read the real Hydrawise schedule/run history and simulate those
-   zone runs, writing matching `zone_runs` (source `twin`) so joins can be tested.
+3. **Scenario zone demand** — a scenario's `zone_on` steps open a simulated valve so the
+   well sees flow. Those steps stay in the truth log. They are not written to SQLite.
+   A live Hydrawise mirror is out of scope.
 
 ### Time modes
 - `speed: 1` — real time (good for end-to-end and live demos).

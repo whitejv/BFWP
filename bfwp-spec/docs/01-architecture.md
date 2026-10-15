@@ -1,10 +1,10 @@
 # 01 — Architecture
 
 ## Goal
-Give Claude (and the Landscape Committee) signals Hydrawise can't provide — **well
-pressure, pump motor current, and independent flow** — time-aligned with Hydrawise zone
-runs, so questions like *"is there a leak?"*, *"is the pump wearing?"* and *"which zone is
-misbehaving?"* can be answered from data.
+Give Claude (and the Landscape Committee) the signals the well monitor measures: **well
+pressure, pump motor current, and flow**, with device timestamps in SQLite. This MCP
+covers the well monitor only. Zone schedules and controller status belong to a separate
+Hydrawise MCP. When a question needs both, Claude fuses the two results.
 
 ## Data flow
 ```
@@ -13,14 +13,17 @@ misbehaving?"* can be answered from data.
 │ ESP32-C6 (well1) │ ───────────► │ HiveMQ      │ ─────► │ bfwp-ingest (launchd)    │
 │  psi · amps ·    │  bfwp/well1/…│ Cloud       │        │   validate → SQLite (WAL)│
 │  flow pulses     │              │ (broker)    │        │   rollups · pump cycles  │
-└──────────────────┘              │             │        │   Hydrawise run sync     │
-┌──────────────────┐              │             │        └────────────┬─────────────┘
-│ bfwp-twin (Mac)  │ ───────────► │             │                     │ read-only
+└──────────────────┘              │             │        └────────────┬─────────────┘
+┌──────────────────┐              │             │                     │ read-only
+│ bfwp-twin (Mac)  │ ───────────► │             │                     │
 │  simulated twin1 │ bfwp-sim/…   └─────────────┘        ┌────────────▼─────────────┐
 └──────────────────┘                                     │ bfwp-mcp  → Claude       │
-                                                         │ (+ Hydrawise MCP)        │
+                                                         │ well monitor only        │
                                                          └──────────────────────────┘
 ```
+Claude may also talk to a Hydrawise MCP. That server is not part of this repo, and
+`bfwp-mcp` does not call it.
+
 The well-house Wi-Fi is isolated from the home network, so a cloud broker is the
 rendezvous point. Neither side needs inbound ports.
 
@@ -41,8 +44,8 @@ All components live in one git repo (`BFWP`), one folder each.
 | Contracts & design | `bfwp-spec` | — | — |
 | Device | `bfwp-firmware` | MQTT `bfwp/<dev>/…` | sensors |
 | Digital twin | `bfwp-twin` | MQTT `bfwp-sim/<dev>/…`, truth log | scenarios, `…/cmd` |
-| Ingest | `bfwp-ingest` | `well.db`, `well-sim.db` (**sole writer, owns schema**) | MQTT, Hydrawise API |
-| Query server | `bfwp-mcp` | nothing | databases (read-only) |
+| Ingest | `bfwp-ingest` | `well.db`, `well-sim.db` (**sole writer, owns schema**) | MQTT |
+| Query server | `bfwp-mcp` | nothing | databases (read-only). Well monitor only. |
 
 ## Key design decisions
 1. **All unit conversion on the ESP32** (ESP-IDF firmware); messages carry engineering units.
@@ -59,8 +62,8 @@ All components live in one git repo (`BFWP`), one folder each.
    **device-side flash buffering**, so neither a sleeping Mac nor a Wi-Fi outage loses data.
 7. **SQLite on local disk**, WAL mode, nightly `.backup` to a synced folder.
 8. **Sim data is physically separate**: different topic root and different database file.
-9. **MCP tools are question-shaped** (pump cycles, overnight decay, zone signatures), not raw
-   dumps, and downsample long ranges.
+9. **MCP tools are question-shaped** (pump cycles, overnight decay, flow totals), not raw
+   dumps, and downsample long ranges. They do not join Hydrawise zone runs.
 
 ## Security
 - TLS to HiveMQ always (port 8883).
