@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "bfwp": {
+      "command": "/Volumes/iHome/Users/dub/Code/BFWP/bfwp-mcp/.venv/bin/bfwp-mcp",
+      "env": {
+        "SIM_DB_PATH": "/Volumes/iHome/Users/dub/BFWP-data/well-sim.db",
+        "DB_PATH": "/Volumes/iHome/Users/dub/BFWP-data/well.db",
+        "LOCAL_TZ": "America/Chicago"
+      }
+    }
+  }
+}

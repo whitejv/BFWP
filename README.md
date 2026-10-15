@@ -68,4 +68,22 @@ writes `~/Library/LaunchAgents/com.bfwp.ingest.plist` from
 
 Start will fail until `bfwp-ingest` is installed into `bfwp-ingest/.venv` (the CMake build
 does that once `bfwp-ingest/pyproject.toml` exists). The twin is started by hand. Cursor
-starts the MCP server when a chat needs it.
+starts the MCP server when a chat needs it. Register it for this repo with:
+
+```bash
+mkdir -p /Volumes/iHome/Users/dub/Code/BFWP/.cursor
+cat > /Volumes/iHome/Users/dub/Code/BFWP/.cursor/mcp.json << 'EOF'
+{
+  "mcpServers": {
+    "bfwp": {
+      "command": "/Volumes/iHome/Users/dub/Code/BFWP/bfwp-mcp/.venv/bin/bfwp-mcp",
+      "env": {
+        "SIM_DB_PATH": "/Volumes/iHome/Users/dub/BFWP-data/well-sim.db",
+        "DB_PATH": "/Volumes/iHome/Users/dub/BFWP-data/well.db",
+        "LOCAL_TZ": "America/Chicago"
+      }
+    }
+  }
+}
+EOF
+```
